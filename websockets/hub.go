@@ -71,6 +71,18 @@ func (h *Hub) Serve(w http.ResponseWriter, r *http.Request) {
 	go c.readLoop()
 }
 
+func (h *Hub) ServeWithNamespace(namespace string, w http.ResponseWriter, r *http.Request) {
+	ws, err := h.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	c := &connection{namespace: namespace, hub: h, ws: ws, send: make(chan interface{}, 256)}
+	h.registerChan <- c
+	go c.writeLoop()
+	go c.readLoop()
+}
+
 func (h *Hub) Broadcast(data interface{}) {
 	h.messages <- data
 }

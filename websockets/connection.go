@@ -3,7 +3,9 @@ package websockets
 import (
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/gorilla/websocket"
+	"github.com/mailhog/data"
 )
 
 const (
@@ -18,9 +20,10 @@ const (
 )
 
 type connection struct {
-	hub  *Hub
-	ws   *websocket.Conn
-	send chan interface{}
+	namespace string
+	hub       *Hub
+	ws        *websocket.Conn
+	send      chan interface{}
 }
 
 func (c *connection) readLoop() {
@@ -51,7 +54,15 @@ func (c *connection) writeLoop() {
 				c.writeControl(websocket.CloseMessage)
 				return
 			}
-			if err := c.writeJSON(message); err != nil {
+
+			msg, ok := message.(*data.Message)
+			if !ok {
+				return
+			}
+
+			spew.Dump(msg)
+
+			if err := c.writeJSON(msg); err != nil {
 				return
 			}
 		case <-ticker.C:
