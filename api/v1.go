@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bobrnor/storage"
 	"github.com/gorilla/pat"
 	"github.com/ian-kent/go-log/log"
 	"github.com/mailhog/MailHog-Server/config"
 	"github.com/mailhog/data"
-	"github.com/mailhog/storage"
 
 	"github.com/ian-kent/goose"
 )
@@ -136,6 +136,11 @@ func (apiv1 *APIv1) messages(w http.ResponseWriter, req *http.Request) {
 		bytes, _ := json.Marshal(messages)
 		w.Header().Add("Content-Type", "text/json")
 		w.Write(bytes)
+	case *storage.BoltDB:
+		messages, _ := apiv1.config.Storage.List(0, 1000)
+		bytes, _ := json.Marshal(messages)
+		w.Header().Add("Content-Type", "text/json")
+		w.Write(bytes)
 	default:
 		w.WriteHeader(500)
 	}
@@ -185,6 +190,14 @@ func (apiv1 *APIv1) download(w http.ResponseWriter, req *http.Request) {
 		w.Write([]byte("\r\n" + message.Content.Body))
 	case *storage.InMemory:
 		message, _ := apiv1.config.Storage.(*storage.InMemory).Load(id)
+		for h, l := range message.Content.Headers {
+			for _, v := range l {
+				w.Write([]byte(h + ": " + v + "\r\n"))
+			}
+		}
+		w.Write([]byte("\r\n" + message.Content.Body))
+	case *storage.BoltDB:
+		message, _ := apiv1.config.Storage.Load(id)
 		for h, l := range message.Content.Headers {
 			for _, v := range l {
 				w.Write([]byte(h + ": " + v + "\r\n"))

@@ -11,7 +11,7 @@ import (
 	"github.com/mailhog/MailHog-Server/monkey"
 	"github.com/mailhog/data"
 	"github.com/mailhog/smtp"
-	"github.com/mailhog/storage"
+	"github.com/bobrnor/storage"
 )
 
 // Session represents a SMTP session using net.TCPConn

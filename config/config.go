@@ -6,10 +6,10 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/bobrnor/storage"
 	"github.com/ian-kent/envconf"
 	"github.com/mailhog/MailHog-Server/monkey"
 	"github.com/mailhog/data"
-	"github.com/mailhog/storage"
 )
 
 // DefaultConfig is the default config
@@ -22,6 +22,8 @@ func DefaultConfig() *Config {
 		MongoDb:      "mailhog",
 		MongoColl:    "messages",
 		MaildirPath:  "",
+		BoltDBPath:   "",
+		BoltDBBucket: "",
 		StorageType:  "memory",
 		CORSOrigin:   "",
 		WebPath:      "",
@@ -41,6 +43,8 @@ type Config struct {
 	StorageType      string
 	CORSOrigin       string
 	MaildirPath      string
+	BoltDBPath       string
+	BoltDBBucket     string
 	InviteJim        bool
 	Storage          storage.Storage
 	MessageChan      chan *data.Message
@@ -88,6 +92,10 @@ func Configure() *Config {
 		log.Println("Using maildir message storage")
 		s := storage.CreateMaildir(cfg.MaildirPath)
 		cfg.Storage = s
+	case "boltdb":
+		log.Println("Using boltdb message storage")
+		s := storage.CreateBoltDB(cfg.BoltDBPath, cfg.BoltDBBucket)
+		cfg.Storage = s
 	default:
 		log.Fatalf("Invalid storage type %s", cfg.StorageType)
 	}
@@ -126,6 +134,8 @@ func RegisterFlags() {
 	flag.StringVar(&cfg.MongoColl, "mongo-coll", envconf.FromEnvP("MH_MONGO_COLLECTION", "messages").(string), "MongoDB collection, e.g. messages")
 	flag.StringVar(&cfg.CORSOrigin, "cors-origin", envconf.FromEnvP("MH_CORS_ORIGIN", "").(string), "CORS Access-Control-Allow-Origin header for API endpoints")
 	flag.StringVar(&cfg.MaildirPath, "maildir-path", envconf.FromEnvP("MH_MAILDIR_PATH", "").(string), "Maildir path (if storage type is 'maildir')")
+	flag.StringVar(&cfg.MaildirPath, "boltdb-path", envconf.FromEnvP("MH_BOLTDB_PATH", "").(string), "BoltDB path (if storage type is 'boltdb')")
+	flag.StringVar(&cfg.MaildirPath, "boltdb-bucket", envconf.FromEnvP("MH_BOLTDB_BUCKET", "").(string), "BoltDB bucket (if storage type is 'boltdb')")
 	flag.BoolVar(&cfg.InviteJim, "invite-jim", envconf.FromEnvP("MH_INVITE_JIM", false).(bool), "Decide whether to invite Jim (beware, he causes trouble)")
 	flag.StringVar(&cfg.OutgoingSMTPFile, "outgoing-smtp", envconf.FromEnvP("MH_OUTGOING_SMTP", "").(string), "JSON file containing outgoing SMTP servers")
 	Jim.RegisterFlags()
