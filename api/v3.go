@@ -32,6 +32,8 @@ func createAPIv3(conf *config.Config, r *pat.Router) *APIv3 {
 		wsHub:       websockets.NewHub(),
 	}
 
+	r.Path(conf.WebPath + "/api/v3/namespaces").Methods("GET").HandlerFunc(apiv3.namespaces)
+
 	r.Path(conf.WebPath + "/api/v3/{namespace}/messages").Methods("GET").HandlerFunc(apiv3.messages)
 	r.Path(conf.WebPath + "/api/v3/{namespace}/messages").Methods("OPTIONS").HandlerFunc(apiv3.defaultOptions)
 
@@ -86,6 +88,21 @@ func (apiv3 *APIv3) getStartLimit(w http.ResponseWriter, req *http.Request) (sta
 	}
 
 	return
+}
+
+func (apiv3 *APIv3) namespaces(w http.ResponseWriter, req *http.Request) {
+	log.Println("[APIv3] GET /api/v3/namespaces")
+
+	apiv3.defaultOptions(w, req)
+
+	res, err := apiv3.config.Storage.(storage.StorageWithNamespace).ListNamespaces()
+	if err != nil {
+		panic(err)
+	}
+
+	bytes, _ := json.Marshal(res)
+	w.Header().Add("Content-Type", "text/json")
+	w.Write(bytes)
 }
 
 func (apiv3 *APIv3) messages(w http.ResponseWriter, req *http.Request) {
