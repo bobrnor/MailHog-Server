@@ -3,8 +3,8 @@ package api
 import (
 	gohttp "net/http"
 
+	"github.com/bobrnor/MailHog-Server/config"
 	"github.com/gorilla/pat"
-	"github.com/mailhog/MailHog-Server/config"
 )
 
 func CreateAPI(conf *config.Config, r gohttp.Handler) {

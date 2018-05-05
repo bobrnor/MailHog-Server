@@ -6,12 +6,12 @@ import (
 
 	gohttp "net/http"
 
+	"github.com/bobrnor/MailHog-Server/api"
+	"github.com/bobrnor/MailHog-Server/config"
+	"github.com/bobrnor/MailHog-Server/smtp"
+	comcfg "github.com/bobrnor/MailHog/config"
 	"github.com/ian-kent/go-log/log"
-	"github.com/mailhog/MailHog-Server/api"
-	"github.com/mailhog/MailHog-Server/config"
-	"github.com/mailhog/MailHog-Server/smtp"
 	"github.com/mailhog/MailHog-UI/assets"
-	comcfg "github.com/mailhog/MailHog/config"
 	"github.com/mailhog/http"
 )
 

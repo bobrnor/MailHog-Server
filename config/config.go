@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/bobrnor/MailHog-Server/monkey"
 	"github.com/bobrnor/storage"
 	"github.com/ian-kent/envconf"
-	"github.com/mailhog/MailHog-Server/monkey"
 	"github.com/mailhog/data"
 )
 
