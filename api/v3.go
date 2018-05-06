@@ -35,6 +35,9 @@ func createAPIv3(conf *config.Config, r *pat.Router) *APIv3 {
 
 	r.Path(conf.WebPath + "/api/v3/{namespace}/messages").Methods("GET").HandlerFunc(apiv3.messages)
 	r.Path(conf.WebPath + "/api/v3/{namespace}/messages").Methods("OPTIONS").HandlerFunc(apiv3.defaultOptions)
+	r.Path(conf.WebPath + "/api/v3/{namespace}/messages").Methods("DELETE").HandlerFunc(apiv3.delete_all)
+
+	r.Path(conf.WebPath + "/api/v3/{namespace}/messages/{id}").Methods("DELETE").HandlerFunc(apiv3.delete_one)
 
 	r.Path(conf.WebPath + "/api/v3/{namespace}/search").Methods("GET").HandlerFunc(apiv3.search)
 	r.Path(conf.WebPath + "/api/v3/{namespace}/search").Methods("OPTIONS").HandlerFunc(apiv3.defaultOptions)
@@ -191,6 +194,67 @@ func (apiv3 *APIv3) search(w http.ResponseWriter, req *http.Request) {
 	b, _ := json.Marshal(res)
 	w.Header().Add("Content-Type", "application/json")
 	w.Write(b)
+}
+
+func (apiv3 *APIv3) delete_all(w http.ResponseWriter, req *http.Request) {
+	log.Println("[APIv3] POST /api/v3/{namespace}/messages")
+
+	apiv3.defaultOptions(w, req)
+
+	w.Header().Add("Content-Type", "text/json")
+
+	ns := req.URL.Query().Get(":namespace")
+
+	if len(ns) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	s, ok := apiv3.config.Storage.(storage.StorageWithNamespace)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err := s.DeleteAllWithNamespace(ns)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+
+	w.WriteHeader(200)
+}
+
+func (apiv3 *APIv3) delete_one(w http.ResponseWriter, req *http.Request) {
+	id := req.URL.Query().Get(":id")
+
+	log.Printf("[APIv3] POST /api/v3/{namespace}/messages/%s/delete\n", id)
+
+	apiv3.defaultOptions(w, req)
+
+	w.Header().Add("Content-Type", "text/json")
+
+	ns := req.URL.Query().Get(":namespace")
+
+	if len(ns) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	s, ok := apiv3.config.Storage.(storage.StorageWithNamespace)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err := s.DeleteOneWithNamespace(ns, id)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+	w.WriteHeader(200)
 }
 
 func (apiv3 *APIv3) websocket(w http.ResponseWriter, req *http.Request) {
