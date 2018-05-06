@@ -8,7 +8,6 @@ import (
 	"github.com/bobrnor/MailHog-Server/config"
 	"github.com/bobrnor/MailHog-Server/websockets"
 	"github.com/bobrnor/storage"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/pat"
 	"github.com/ian-kent/go-log/log"
 	"github.com/mailhog/data"
@@ -112,7 +111,7 @@ func (apiv3 *APIv3) messages(w http.ResponseWriter, req *http.Request) {
 
 	start, limit := apiv3.getStartLimit(w, req)
 
-	ns := mux.Vars(req)["namespace"]
+	ns := req.URL.Query().Get(":namespace")
 
 	if len(ns) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -155,7 +154,7 @@ func (apiv3 *APIv3) search(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ns := mux.Vars(req)["namespace"]
+	ns := req.URL.Query().Get(":namespace")
 
 	if len(ns) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
@@ -179,7 +178,7 @@ func (apiv3 *APIv3) search(w http.ResponseWriter, req *http.Request) {
 func (apiv3 *APIv3) websocket(w http.ResponseWriter, req *http.Request) {
 	log.Println("[APIv3] GET /api/v3/{namespace}/websocket")
 
-	ns := mux.Vars(req)["namespace"]
+	ns := req.URL.Query().Get(":namespace")
 
 	if len(ns) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
