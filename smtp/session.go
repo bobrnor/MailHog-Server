@@ -7,6 +7,8 @@ import (
 	"log"
 	"strings"
 
+	"encoding/json"
+
 	"github.com/bobrnor/MailHog-Server/monkey"
 	"github.com/bobrnor/storage"
 	"github.com/ian-kent/linkio"
@@ -101,9 +103,39 @@ func (c *Session) validateSender(from string) bool {
 func (c *Session) acceptMessage(msg *data.SMTPMessage) (id string, err error) {
 	m := msg.Parse(c.proto.Hostname)
 	c.logf("Storing message %s", m.ID)
-	id, err = c.storage.Store(m)
+
+	if s, ok := c.storage.(storage.StorageWithNamespace); ok {
+		ns := c.namespace(m)
+		if len(ns) == 0 {
+			id, err = c.storage.Store(m)
+		} else {
+			id, err = s.StoreWithNamespace(ns, m)
+		}
+	} else {
+		id, err = c.storage.Store(m)
+	}
+
 	c.messageChan <- m
 	return
+}
+
+func (c *Session) namespace(msg *data.Message) string {
+	xFields, ok := msg.Content.Headers["X-Fields"]
+	if !ok && len(xFields) == 0 {
+		return ""
+	}
+
+	xField := xFields[0]
+
+	var xFieldJson struct {
+		Microservice string `json:"ms"`
+	}
+
+	if err := json.Unmarshal([]byte(xField), &xFieldJson); err != nil {
+		return ""
+	}
+
+	return xFieldJson.Microservice
 }
 
 func (c *Session) logf(message string, args ...interface{}) {

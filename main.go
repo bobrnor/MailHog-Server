@@ -9,9 +9,9 @@ import (
 	"github.com/bobrnor/MailHog-Server/api"
 	"github.com/bobrnor/MailHog-Server/config"
 	"github.com/bobrnor/MailHog-Server/smtp"
+	"github.com/bobrnor/MailHog-UI/assets"
 	comcfg "github.com/bobrnor/MailHog/config"
 	"github.com/ian-kent/go-log/log"
-	"github.com/mailhog/MailHog-UI/assets"
 	"github.com/mailhog/http"
 )
 
