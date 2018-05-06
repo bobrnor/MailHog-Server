@@ -94,7 +94,13 @@ func (apiv3 *APIv3) namespaces(w http.ResponseWriter, req *http.Request) {
 
 	apiv3.defaultOptions(w, req)
 
-	res, err := apiv3.config.Storage.(storage.StorageWithNamespace).ListNamespaces()
+	s, ok := apiv3.config.Storage.(storage.StorageWithNamespace)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	res, err := s.ListNamespaces()
 	if err != nil {
 		panic(err)
 	}
@@ -120,7 +126,13 @@ func (apiv3 *APIv3) messages(w http.ResponseWriter, req *http.Request) {
 
 	var res messagesResultV3
 
-	messages, err := apiv3.config.Storage.(storage.StorageWithNamespace).ListWithNamespace(ns, start, limit)
+	s, ok := apiv3.config.Storage.(storage.StorageWithNamespace)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	messages, err := s.ListWithNamespace(ns, start, limit)
 	if err != nil {
 		panic(err)
 	}
@@ -128,7 +140,7 @@ func (apiv3 *APIv3) messages(w http.ResponseWriter, req *http.Request) {
 	res.Count = len([]data.Message(*messages))
 	res.Start = start
 	res.Items = []data.Message(*messages)
-	res.Total = apiv3.config.Storage.Count()
+	res.Total = s.CountWithNamespace(ns)
 
 	bytes, _ := json.Marshal(res)
 	w.Header().Add("Content-Type", "text/json")
@@ -163,7 +175,13 @@ func (apiv3 *APIv3) search(w http.ResponseWriter, req *http.Request) {
 
 	var res messagesResultV3
 
-	messages, total, _ := apiv3.config.Storage.(storage.StorageWithNamespace).SearchWithNamespace(ns, kind, query, start, limit)
+	s, ok := apiv3.config.Storage.(storage.StorageWithNamespace)
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	messages, total, _ := s.SearchWithNamespace(ns, kind, query, start, limit)
 
 	res.Count = len([]data.Message(*messages))
 	res.Start = start
