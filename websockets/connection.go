@@ -3,7 +3,8 @@ package websockets
 import (
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
+	"encoding/json"
+
 	"github.com/gorilla/websocket"
 	"github.com/mailhog/data"
 )
@@ -60,7 +61,10 @@ func (c *connection) writeLoop() {
 				return
 			}
 
-			spew.Dump(msg)
+			ns := c.fetchNamespace(msg)
+			if ns != c.namespace {
+				return
+			}
 
 			if err := c.writeJSON(msg); err != nil {
 				return
@@ -71,6 +75,25 @@ func (c *connection) writeLoop() {
 			}
 		}
 	}
+}
+
+func (c *connection) fetchNamespace(msg *data.Message) string {
+	xFields, ok := msg.Content.Headers["X-Fields"]
+	if !ok && len(xFields) == 0 {
+		return ""
+	}
+
+	xField := xFields[0]
+
+	var xFieldJson struct {
+		Microservice string `json:"ms"`
+	}
+
+	if err := json.Unmarshal([]byte(xField), &xFieldJson); err != nil {
+		return ""
+	}
+
+	return xFieldJson.Microservice
 }
 
 func (c *connection) writeJSON(message interface{}) error {
